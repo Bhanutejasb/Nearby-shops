@@ -1,3 +1,11 @@
+async function load(){
+  try{
+    const q=x=>getDocs(x).then(r=>r.docs.map(d=>({id:d.id,...d.data()})));
+    const P=collection(db,"places");
+    [places,pending,mine]=await Promise.all([q(query(P,where("status","==","approved"))),isAdmin()?q(query(P,where("status","==","pending"))):[],user?q(query(P,where("ownerId","==",user.uid))):[]]);
+  }catch(e){console.error(e);toast("Could not load places. Check your internet and try again.")}
+  loading=false;render();
+}
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Nearby Eats</title><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#14302B">
@@ -38,19 +46,19 @@ table{width:100%;border-collapse:collapse}td{padding:6px 0;border-bottom:1px das
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,collection,addDoc,getDocs,query,where,doc,updateDoc,deleteDoc,Timestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {initializeFirestore,collection,addDoc,getDocs,query,where,doc,updateDoc,deleteDoc,Timestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ====== STEP 1: PASTE YOUR FIREBASE CONFIG AND ADMIN EMAIL ====== */
-const CFG={apiKey:"AIzaSyCzzJ1eqhHu1JvKPdX2gf4kKaKDl8HG304",authDomain:"nearby-shops-36e19.firebaseapp.com",projectId:"nearby-shops-36e19",storageBucket:"nearby-shops-36e19.firebasestorage.app",messagingSenderId:"972493785060",appId:"1:972493785060:web:e9bf9c94b239bc412e69f1"};
+const CFG={apiKey:"AIzaSyAeDrox1_ZQNHkLyWiT0v4HXoLAGTTbPMg",authDomain:"nearby-shops-62635.web.app",projectId:"nearby-shops-62635",storageBucket:"nearby-shops-62635.firebasestorage.app",messagingSenderId:"786664571609",appId:"1:786664571609:web:65599e112620481b8374c8"};
 const ADMINS=["always.smilebh@gmail.com"];
 const DAILY_LIMIT=3;
 /* ================================================================= */
 
-const fb=initializeApp(CFG),auth=getAuth(fb),db=getFirestore(fb);
+const fb=initializeApp(CFG),auth=getAuth(fb),db=initializeFirestore(fb,{experimentalAutoDetectLongPolling:true});
 const CATS=["Restaurant","Function hall","Hotel","Food counter"];
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let user=null,pos=null,places=[],pending=[],mine=[],cat="All",tab="nearby",draftLoc=null;
+let loading=true,user=null,pos=null,places=[],pending=[],mine=[],cat="All",tab="nearby",draftLoc=null;
 const isAdmin=()=>user&&ADMINS.includes(user.email);
 const dist=(a,b,c,d)=>{const r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 12742*Math.asin(Math.sqrt(h))};
 const toast=m=>alert(m);
@@ -82,7 +90,7 @@ function vList(){
   const shown=sorted(places.filter(p=>cat=="All"||p.category==cat));
   $("#app").innerHTML=`<div class="row" style="margin:0 0 10px"><button class="btn" id="loc">${pos?"Location set":"Use my location"}</button></div>
   <div class="chips">${["All",...CATS].map(c=>`<span class="chip ${c==cat?"on":""}" data-c="${c}">${c}</span>`).join("")}</div>
-  ${shown.map(card).join("")||`<p class="mute">No places here yet. Be the first to add one.</p>`}`;
+  ${shown.map(card).join("")||`<p class="mute">${loading?"Loading places...":"No places here yet. Be the first to add one."}</p>`}`;
   $("#loc").onclick=()=>getPos(p=>{pos=p;render()});
   document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{cat=c.dataset.c;render()});bind();
 }
@@ -134,5 +142,6 @@ function vAdmin(){
   document.querySelectorAll("[data-no]").forEach(b=>b.onclick=async()=>{if(confirm("Delete this place?")){await deleteDoc(doc(db,"places",b.dataset.no));load()}});
   document.querySelectorAll("[data-of]").forEach(b=>b.onclick=async()=>{const t=prompt("Offer text (leave empty to remove):");if(t!==null){await updateDoc(doc(db,"places",b.dataset.of),{offer:t.trim()});load()}});
 }
+render();load();
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
 </script></body></html>
