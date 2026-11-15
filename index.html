@@ -1,139 +1,162 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Nearby Eats</title><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#14302B">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Nearby Finds</title><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#F26A1B">
 <link rel="icon" href="icon-512.png">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
-:root{--ink:#14302B;--bg:#F2F5F3;--card:#fff;--line:#D5DED9;--gold:#E8A317;--chili:#C2412D;--mute:#5E726C}
-@media(prefers-color-scheme:dark){:root{--ink:#E6EFEA;--bg:#0E1F1C;--card:#16302B;--line:#27453F;--mute:#9DB3AC}}
-*{box-sizing:border-box}body{margin:0;font:16px/1.45 "Bricolage Grotesque",system-ui,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:72px}
-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:#14302B;color:#fff;position:sticky;top:0;z-index:5}
-h1{font-size:22px;font-weight:800;margin:0}h1 b{color:var(--gold)}
-button,select,input,textarea{font:inherit;color:inherit}
-.btn{background:var(--gold);color:#14302B;border:0;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer}
-.btn.alt{background:transparent;border:1.5px solid var(--line);color:var(--ink)}.btn.bad{background:var(--chili);color:#fff}
-main{max-width:640px;margin:0 auto;padding:14px}
-.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px}
-.chip{white-space:nowrap;border:1.5px solid var(--line);background:var(--card);border-radius:20px;padding:6px 14px;cursor:pointer}
-.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
-.card h3{margin:0 0 2px;font-size:18px}.mute{color:var(--mute);font-size:14px}
-.offer{margin-top:8px;padding:8px 10px;border-left:4px solid var(--chili);background:rgba(194,65,45,.1);border-radius:6px;font-weight:600}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--line)}
-nav button{flex:1;padding:14px 4px;background:none;border:0;font-weight:600;color:var(--mute);cursor:pointer}
-nav button.on{color:var(--ink);box-shadow:inset 0 3px var(--gold)}
-label{display:block;margin:10px 0 4px;font-weight:600}
-input,select,textarea{width:100%;padding:10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card)}
+:root{--o:#F26A1B;--o2:#FF9A3C;--ink:#1B1511;--bg:#FFF8F1;--line:#F0E3D6;--mute:#8A7A6D}
+*{box-sizing:border-box}body{margin:0;font:16px/1.45 "Bricolage Grotesque",system-ui,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:90px}
+header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;position:sticky;top:0;background:var(--bg);z-index:5}
+h1{margin:0;font-size:24px;font-weight:800}h1 b{color:var(--o)}h3{margin:14px 0 8px}
+main{max-width:640px;margin:0 auto;padding:0 14px}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;background:#fff}
+.btn{background:linear-gradient(135deg,var(--o),var(--o2));color:#fff;border:0;border-radius:12px;padding:10px 16px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.alt{background:#fff;color:var(--ink);border:1.5px solid var(--line)}.btn.bad{background:#C2412D}
+.hero{display:flex;justify-content:space-between;align-items:center;background:var(--ink);color:#fff;border-radius:18px;padding:18px;margin:6px 0 12px}
+.hero h2{margin:0 0 10px;font-size:28px;color:var(--o2);font-style:italic}.big{font-size:64px}
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.ct{background:#FFE9D9;border-radius:14px;padding:10px 2px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;border:2px solid transparent}.ct span{display:block;font-size:26px}.ct.on{border-color:var(--o)}
+.card{display:flex;gap:10px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px;margin-bottom:10px;position:relative;cursor:pointer}
+.cimg{width:84px;height:84px;border-radius:12px;object-fit:cover;flex:none}.ph{display:grid;place-items:center;background:#FFE9D9;font-size:34px}
+.cb{flex:1;min-width:0}.mute{color:var(--mute);font-size:14px}
+.tag{background:var(--o);color:#fff;font-size:11px;border-radius:8px;padding:1px 7px;margin-left:6px}
+.offer{margin-top:6px;padding:5px 9px;border-left:4px solid var(--o);background:#FFF0E4;border-radius:6px;font-weight:600;font-size:14px}
+.heart{position:absolute;top:6px;right:8px;background:none;border:0;font-size:22px;color:var(--o);cursor:pointer}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;align-items:center;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;padding:10px 2px;background:none;border:0;font-size:12px;font-weight:600;color:var(--mute);cursor:pointer}nav button.on{color:var(--o)}nav i{display:block;font-style:normal;font-size:20px}
+nav .plus{flex:none;width:54px;height:54px;border-radius:50%;margin:-22px 6px 0;background:linear-gradient(135deg,var(--o),var(--o2));color:#fff;font-size:30px;padding:0;box-shadow:0 4px 12px #F26A1B66}
+label{display:block;margin:10px 0 4px;font-weight:600}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:9;align-items:flex-end}.modal.on{display:flex}
+#sheet{background:var(--bg);width:100%;max-width:640px;margin:0 auto;max-height:90vh;overflow:auto;border-radius:20px 20px 0 0;padding:14px}
+.dimg{width:100%;height:180px;border-radius:14px;object-fit:cover;margin-bottom:8px}
 table{width:100%;border-collapse:collapse}td{padding:6px 0;border-bottom:1px dashed var(--line)}td:last-child{text-align:right;font-weight:600}
-#modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;z-index:9}
-#modal.on{display:flex}#sheet{background:var(--bg);width:100%;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px;max-width:640px;margin:0 auto}
-.badge{background:var(--chili);color:#fff;border-radius:10px;padding:0 7px;font-size:12px;margin-left:4px}
-:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-</style></head><body>
-<header><h1>Nearby <b>Eats</b></h1><button class="btn alt" id="auth" style="color:#fff;border-color:#ffffff55"></button></header>
-<main id="app"></main>
-<nav id="nav"></nav>
-<div id="modal"><div id="sheet"></div></div>
+#mapm{background:#fff;flex-direction:column;align-items:stretch;z-index:20}#mp{flex:1;min-height:300px}.mbar{padding:10px;display:flex;gap:8px;align-items:center}.mbar span{flex:1;font-size:14px}
+.badge{background:#C2412D;color:#fff;border-radius:10px;padding:0 7px;font-size:12px}
+:focus-visible{outline:3px solid var(--o);outline-offset:2px}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script></head><body>
+<header><h1>Nearby <b>Finds</b></h1><button class="btn alt" data-a="lang" id="lg"></button></header>
+<main id="app"></main><nav id="nav"></nav>
+<div class="modal" id="modal"><div id="sheet"></div></div>
+<div class="modal" id="mapm"><div class="mbar"><button class="btn alt" data-a="mapx">✕</button><span id="mh"></span><button class="btn" data-a="pickok" id="mo"></button></div><div id="mp"></div></div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {initializeFirestore,collection,addDoc,getDocs,query,where,doc,updateDoc,deleteDoc,Timestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-/* ====== STEP 1: PASTE YOUR FIREBASE CONFIG AND ADMIN EMAIL ====== */
+import {initializeFirestore,collection,addDoc,getDocs,setDoc,query,where,doc,updateDoc,deleteDoc,Timestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const CFG={apiKey:"AIzaSyAeDrox1_ZQNHkLyWiT0v4HXoLAGTTbPMg",authDomain:"nearby-shops-62635.web.app",projectId:"nearby-shops-62635",storageBucket:"nearby-shops-62635.firebasestorage.app",messagingSenderId:"786664571609",appId:"1:786664571609:web:65599e112620481b8374c8"};
-const ADMINS=["always.smilebh@gmail.com"];
-const DAILY_LIMIT=3;
-/* ================================================================= */
-
+const ADMINS=["always.smilebh@gmail.com"],LIMIT=3;
 const fb=initializeApp(CFG),auth=getAuth(fb),db=initializeFirestore(fb,{experimentalAutoDetectLongPolling:true});
-const CATS=["Restaurant","Function hall","Hotel","Food counter"];
-const $=s=>document.querySelector(s);
+const CATS=["Restaurant","Function hall","Hotel","Food counter"],IC={Restaurant:"🍽️","Function hall":"💍",Hotel:"🛏️","Food counter":"🍦"};
+const TE={"Home":"హోమ్","Offers":"ఆఫర్లు","Saved":"సేవ్ చేసినవి","Profile":"ప్రొఫైల్","Find the best places":"ఉత్తమ ప్రదేశాలను కనుగొనండి","near you!":"మీ దగ్గరలోనే!","Use my location":"నా లొకేషన్ వాడండి","Location set":"లొకేషన్ సెట్ అయింది","Search places or dishes...":"ప్రదేశాలు లేదా వంటకాలు వెతకండి...","Nearby places":"సమీప ప్రదేశాలు","Loading...":"లోడ్ అవుతోంది...","No places found.":"ప్రదేశాలు కనబడలేదు.","Promoted":"ప్రమోటెడ్","Call":"కాల్","WhatsApp":"వాట్సాప్","Directions":"దారి","Save":"సేవ్","Menu":"మెనూ","Reviews":"రివ్యూలు","No reviews yet.":"ఇంకా రివ్యూలు లేవు.","Write a review":"రివ్యూ రాయండి","Send":"పంపండి","Sign in with Google":"గూగుల్‌తో సైన్ ఇన్ చేయండి","Add a place":"ప్రదేశం జోడించండి","Place name":"ప్రదేశం పేరు","Type":"రకం","Address":"చిరునామా","Phone (optional)":"ఫోన్ (ఐచ్ఛికం)","Photo link (optional)":"ఫోటో లింక్ (ఐచ్ఛికం)","Location":"లొకేషన్","Paste Google Maps link or lat,lng":"గూగుల్ మ్యాప్స్ లింక్ పేస్ట్ చేయండి","Pick on map":"మ్యాప్‌లో ఎంచుకోండి","Menu, one item per line: Item - price":"మెనూ, ప్రతి లైన్‌కు ఒకటి: వంటకం - ధర","Send for approval":"ఆమోదానికి పంపండి","Publish":"ప్రచురించండి","My places":"నా ప్రదేశాలు","Waiting for approval":"ఆమోదం కోసం వేచి ఉంది","Live":"లైవ్","Language":"భాష","Admin panel":"అడ్మిన్ ప్యానెల్","Sign out":"సైన్ అవుట్","Approve":"ఆమోదించు","Reject":"తిరస్కరించు","Delete":"తొలగించు","Set offer":"ఆఫర్ పెట్టు","Promote":"ప్రమోట్ చేయి","Remove promotion":"ప్రమోషన్ తీసివేయి","Daily limit reached":"రోజువారీ పరిమితి చేరుకుంది","Restaurant":"రెస్టారెంట్","Function hall":"ఫంక్షన్ హాల్","Hotel":"హోటల్","Food counter":"ఫుడ్ కౌంటర్","Tap on the map to drop a pin.":"పిన్ పెట్టడానికి మ్యాప్‌పై నొక్కండి.","Confirm":"నిర్ధారించు"};
+const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
+const S={tab:"home",cat:"",q:"",lang:ls("lang")||"en",fav:JSON.parse(ls("fav")||"[]"),pos:null,places:[],pending:[],mine:[],loading:true,user:null,loc:null};
+const t=k=>S.lang=="te"&&TE[k]||k,$=s=>document.querySelector(s),toast=m=>alert(m);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let loading=true,user=null,pos=null,places=[],pending=[],mine=[],cat="All",tab="nearby",draftLoc=null;
-const isAdmin=()=>user&&ADMINS.includes(user.email);
+const isAdmin=()=>S.user&&ADMINS.includes(S.user.email),A={};
 const dist=(a,b,c,d)=>{const r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 12742*Math.asin(Math.sqrt(h))};
-const toast=m=>alert(m);
-
-function getPos(cb){navigator.geolocation?.getCurrentPosition(p=>{cb({lat:p.coords.latitude,lng:p.coords.longitude})},()=>toast("Location is off. Turn on location permission for this site."),{enableHighAccuracy:true,timeout:15000})}
-
+const all=()=>[...S.places,...S.pending,...S.mine];
+function getPos(cb){navigator.geolocation?.getCurrentPosition(p=>cb({lat:p.coords.latitude,lng:p.coords.longitude}),()=>toast("Turn on location permission for this site."),{enableHighAccuracy:true,timeout:15000})}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(b&&A[b.dataset.a])A[b.dataset.a](b.dataset.v,b);else if(e.target.id=="modal")$("#modal").classList.remove("on")});
 async function load(){
-  try{
-    const q=x=>getDocs(x).then(r=>r.docs.map(d=>({id:d.id,...d.data()})));
-    const P=collection(db,"places");
-    [places,pending,mine]=await Promise.all([q(query(P,where("status","==","approved"))),isAdmin()?q(query(P,where("status","==","pending"))):[],user?q(query(P,where("ownerId","==",user.uid))):[]]);
-  }catch(e){console.error(e);toast("Could not load places. Check your internet and try again.")}
-  loading=false;render();
+  try{const q=x=>getDocs(x).then(r=>r.docs.map(d=>({id:d.id,...d.data()}))),P=collection(db,"places");
+    [S.places,S.pending,S.mine]=await Promise.all([q(query(P,where("status","==","approved"))),isAdmin()?q(query(P,where("status","==","pending"))):[],S.user?q(query(P,where("ownerId","==",S.user.uid))):[]]);
+  }catch(e){console.error(e);toast("Could not load places. Check your internet.")}
+  S.loading=false;render();
 }
-onAuthStateChanged(auth,u=>{user=u;$("#auth").textContent=u?"Sign out":"Sign in";load()});
-$("#auth").onclick=()=>user?signOut(auth):signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>toast("Sign-in failed: "+e.code));
-
+onAuthStateChanged(auth,u=>{S.user=u;load()});
+A.signin=()=>signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>toast("Sign-in failed: "+e.code));
+A.signout=()=>signOut(auth).then(()=>{S.tab="home"});
+A.lang=()=>{S.lang=S.lang=="te"?"en":"te";ls("lang",S.lang);render()};
+A.tab=v=>{S.tab=v;render();scrollTo(0,0)};
+A.cat=v=>{S.cat=S.cat==v?"":v;render()};
+A.gps=()=>getPos(p=>{S.pos=p;render()});
+A.close=()=>$("#modal").classList.remove("on");
+A.fav=(id,b)=>{S.fav=S.fav.includes(id)?S.fav.filter(x=>x!=id):[...S.fav,id];ls("fav",JSON.stringify(S.fav));if(S.tab=="saved")render();else{document.querySelectorAll(`[data-a=fav][data-v="${id}"]`).forEach(x=>{if(x.classList.contains("heart"))x.textContent=S.fav.includes(id)?"♥":"♡"})}};
 function render(){
-  const tabs=[["nearby","Nearby"],["offers","Offers"],["add","Add place"]];
-  if(isAdmin())tabs.push(["admin","Admin"+(pending.length?`<span class="badge">${pending.length}</span>`:"")]);
-  $("#nav").innerHTML=tabs.map(([k,v])=>`<button class="${tab==k?"on":""}" data-t="${k}">${v}</button>`).join("");
-  document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
-  ({nearby:vList,offers:vOffers,add:vAdd,admin:vAdmin})[tab]();
+  $("#lg").textContent=S.lang=="te"?"EN":"తె";
+  const N=[["home","🏠","Home"],["offers","🏷️","Offers"],["add","+",""],["saved","♥","Saved"],["me","👤","Profile"]];
+  $("#nav").innerHTML=N.map(([k,i,l])=>k=="add"?`<button class="plus" data-a="tab" data-v="add" aria-label="${t("Add a place")}">+</button>`:`<button class="${S.tab==k||(k=="me"&&S.tab=="admin")?"on":""}" data-a="tab" data-v="${k}"><i>${i}</i>${t(l)}${k=="me"&&S.pending.length?`<span class="badge">${S.pending.length}</span>`:""}</button>`).join("");
+  ({home:vHome,offers:vOffers,saved:vSaved,add:vAdd,me:vMe,admin:vAdmin})[S.tab]();
 }
-function sorted(list){return list.map(p=>({...p,d:pos?dist(pos.lat,pos.lng,p.lat,p.lng):null})).sort((a,b)=>(a.d??1e9)-(b.d??1e9))}
-function card(p){return `<div class="card"><h3>${esc(p.name)}</h3><div class="mute">${esc(p.category)} · ${esc(p.address)}${p.d!=null?` · ${p.d.toFixed(1)} km`:""}</div>${p.offer?`<div class="offer">${esc(p.offer)}</div>`:""}<div class="row"><button class="btn" data-open="${p.id}">Menu &amp; details</button><a class="btn alt" style="text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}">Directions</a></div></div>`}
-function bind(){document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openPlace(b.dataset.open))}
-function vList(){
-  const shown=sorted(places.filter(p=>cat=="All"||p.category==cat));
-  $("#app").innerHTML=`<div class="row" style="margin:0 0 10px"><button class="btn" id="loc">${pos?"Location set":"Use my location"}</button></div>
-  <div class="chips">${["All",...CATS].map(c=>`<span class="chip ${c==cat?"on":""}" data-c="${c}">${c}</span>`).join("")}</div>
-  ${shown.map(card).join("")||`<p class="mute">${loading?"Loading places...":"No places here yet. Be the first to add one."}</p>`}`;
-  $("#loc").onclick=()=>getPos(p=>{pos=p;render()});
-  document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{cat=c.dataset.c;render()});bind();
+const img=(p,c)=>p.photo&&/^https:\/\//.test(p.photo)?`<img class="${c}" src="${esc(p.photo)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:`<div class="${c} ph">${IC[p.category]||"🍽️"}</div>`;
+function list(f){
+  const q=S.q.toLowerCase();
+  return all2(f).filter(p=>(!S.cat||p.category==S.cat)&&(!q||(p.name+" "+p.address+" "+(p.menu||[]).map(m=>m.item).join(" ")).toLowerCase().includes(q)))
+   .map(p=>({...p,d:S.pos?dist(S.pos.lat,S.pos.lng,p.lat,p.lng):null})).sort((a,b)=>(b.promoted?1:0)-(a.promoted?1:0)||(a.d??1e9)-(b.d??1e9));
 }
-function vOffers(){
-  const s=sorted(places.filter(p=>p.offer));
-  $("#app").innerHTML=s.map(card).join("")||`<p class="mute">No offers running right now.</p>`;bind();
+const all2=f=>f?S.places.filter(f):S.places;
+const card=p=>`<div class="card" data-a="open" data-v="${p.id}">${img(p,"cimg")}<div class="cb"><b>${esc(p.name)}</b>${p.promoted?`<span class="tag">${t("Promoted")}</span>`:""}<div class="mute">${esc(t(p.category))} · ${esc(p.address)}</div>${p.d!=null?`<div class="mute">${p.d.toFixed(1)} km</div>`:""}${p.offer?`<div class="offer">${esc(p.offer)}</div>`:""}</div><button class="heart" data-a="fav" data-v="${p.id}" aria-label="${t("Save")}">${S.fav.includes(p.id)?"♥":"♡"}</button></div>`;
+const empty=()=>`<p class="mute">${S.loading?t("Loading..."):t("No places found.")}</p>`;
+function vHome(){
+  $("#app").innerHTML=`<div class="hero"><div><div>${t("Find the best places")}</div><h2>${t("near you!")}</h2><button class="btn" data-a="gps">${S.pos?"✓ "+t("Location set"):t("Use my location")}</button></div><div class="big">🍔</div></div>
+  <input id="q" type="search" placeholder="${esc(t("Search places or dishes..."))}" value="${esc(S.q)}">
+  <div class="cats">${CATS.map(c=>`<div class="ct ${S.cat==c?"on":""}" data-a="cat" data-v="${c}"><span>${IC[c]}</span>${t(c)}</div>`).join("")}</div>
+  <h3>${t("Nearby places")}</h3><div id="list"></div>`;
+  const fill=()=>$("#list").innerHTML=list().map(card).join("")||empty();
+  $("#q").oninput=e=>{S.q=e.target.value;fill()};fill();
 }
-function openPlace(id){
-  const p=[...places,...pending].find(x=>x.id==id);if(!p)return;
-  $("#sheet").innerHTML=`<h2 style="margin:0">${esc(p.name)}</h2><div class="mute">${esc(p.category)} · ${esc(p.address)}</div>
-  ${p.phone?`<p><a href="tel:${esc(p.phone)}">${esc(p.phone)}</a></p>`:""}${p.offer?`<div class="offer">${esc(p.offer)}</div>`:""}
-  <h3>Menu</h3>${(p.menu||[]).length?`<table>${p.menu.map(m=>`<tr><td>${esc(m.item)}</td><td>${m.price?"₹"+esc(m.price):""}</td></tr>`).join("")}</table>`:`<p class="mute">Menu not added yet.</p>`}
-  <div class="row"><a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}">Get directions</a><button class="btn alt" id="x">Close</button></div>`;
-  $("#modal").classList.add("on");$("#x").onclick=()=>$("#modal").classList.remove("on");
+function vOffers(){$("#app").innerHTML=`<h3>${t("Offers")}</h3>`+(list(p=>p.offer).map(card).join("")||empty())}
+function vSaved(){$("#app").innerHTML=`<h3>${t("Saved")}</h3>`+(list(p=>S.fav.includes(p.id)).map(card).join("")||empty())}
+A.open=async id=>{const p=all().find(x=>x.id==id);if(!p)return;sheet(p,null);let R=[];try{R=(await getDocs(collection(db,"places",id,"reviews"))).docs.map(d=>d.data())}catch(e){}sheet(p,R)};
+function sheet(p,R){
+  const ph=(p.phone||"").replace(/\D/g,""),wa=ph.length==10?"91"+ph:ph,avg=R&&R.length?(R.reduce((s,r)=>s+r.rating,0)/R.length).toFixed(1):"";
+  $("#sheet").innerHTML=`<button class="btn alt" data-a="close" style="float:right">✕</button>${img(p,"dimg")}<h2 style="margin:0">${esc(p.name)}${p.promoted?`<span class="tag">${t("Promoted")}</span>`:""}</h2>
+  <div class="mute">${esc(t(p.category))} · ${esc(p.address)}${avg?" · ⭐ "+avg:""}</div>${p.offer?`<div class="offer">${esc(p.offer)}</div>`:""}
+  <div class="row">${ph?`<a class="btn" href="tel:${esc(ph)}">📞 ${t("Call")}</a><a class="btn" target="_blank" rel="noopener" href="https://wa.me/${wa}">💬 ${t("WhatsApp")}</a>`:""}<a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}">🧭 ${t("Directions")}</a><button class="btn alt" data-a="fav" data-v="${p.id}">♡ ${t("Save")}</button></div>
+  <h3>${t("Menu")}</h3>${(p.menu||[]).length?`<table>${p.menu.map(m=>`<tr><td>${esc(m.item)}</td><td>${m.price?"₹"+esc(m.price):""}</td></tr>`).join("")}</table>`:"—"}
+  <h3>${t("Reviews")}</h3>${R===null?t("Loading..."):R.length?R.map(r=>`<div class="mute"><b>${esc(r.name)}</b> ${"⭐".repeat(r.rating)}<br>${esc(r.text)}</div>`).join("<hr>"):`<p class="mute">${t("No reviews yet.")}</p>`}
+  ${S.user?`<label>${t("Write a review")}</label><select id="rs">${[5,4,3,2,1].map(n=>`<option>${n}</option>`).join("")}</select><input id="rt" maxlength="300" style="margin-top:6px"><div class="row"><button class="btn" data-a="rev" data-v="${p.id}">${t("Send")}</button></div>`:`<div class="row"><button class="btn" data-a="signin">${t("Sign in with Google")}</button></div>`}`;
+  $("#modal").classList.add("on");
 }
-$("#modal").onclick=e=>{if(e.target.id=="modal")$("#modal").classList.remove("on")};
-
+A.rev=async id=>{try{await setDoc(doc(db,"places",id,"reviews",S.user.uid),{uid:S.user.uid,name:S.user.displayName||"User",rating:+$("#rs").value,text:$("#rt").value.trim(),createdAt:Timestamp.now()});A.open(id)}catch(e){toast("Could not save review.")}};
+function setLoc(l){S.loc=l;$("#locst").textContent=`✓ ${t("Location set")}: ${l.lat.toFixed(5)}, ${l.lng.toFixed(5)}`}
+function parseLoc(s){const m=s.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)||s.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/)||s.match(/[?&](?:q|ll|query|destination)=(-?\d+\.\d+),\s*(-?\d+\.\d+)/)||s.match(/^\s*(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)\s*$/);return m?{lat:+m[1],lng:+m[2]}:null}
 function vAdd(){
-  if(!user){$("#app").innerHTML=`<div class="card"><h3>Sign in to add a place</h3><p class="mute">We check every new place before it goes live.</p><button class="btn" id="si">Sign in with Google</button></div>`;$("#si").onclick=()=>$("#auth").click();return}
-  const today=new Date();today.setHours(0,0,0,0);
-  const used=mine.filter(p=>p.createdAt?.toDate()>=today).length;
-  const left=isAdmin()?99:DAILY_LIMIT-used;
-  const myList=mine.length?`<h3>Your submissions</h3>${mine.map(p=>`<div class="card"><b>${esc(p.name)}</b> <span class="mute">· ${p.status=="approved"?"Live":"Waiting for approval"}</span></div>`).join("")}`:"";
-  $("#app").innerHTML=left<=0?`<div class="card"><h3>Daily limit reached</h3><p class="mute">You can add ${DAILY_LIMIT} places a day. Come back tomorrow.</p></div>${myList}`:`<div class="card"><h3>${isAdmin()?"Add a place (goes live now)":"Add a place"}</h3>
-  <p class="mute">${isAdmin()?"":"Stand at the place and use your location, so we can check the address. "}${isAdmin()?"":left+" left today."}</p>
-  <label>Name</label><input id="f_n"><label>Type</label><select id="f_c">${CATS.map(c=>`<option>${c}</option>`).join("")}</select>
-  <label>Full address</label><textarea id="f_a" rows="2"></textarea><label>Phone (optional)</label><input id="f_p" type="tel">
-  <label>Map location</label><button class="btn alt" id="f_l">${draftLoc?"Location saved":"Use my current location"}</button>
-  <label>Menu, one item per line: Item - price</label><textarea id="f_m" rows="5" placeholder="Chicken biryani - 180"></textarea>
-  ${isAdmin()?`<label>Offer (optional)</label><input id="f_o">`:""}
-  <div class="row"><button class="btn" id="f_s">${isAdmin()?"Publish":"Send for approval"}</button></div></div>${myList}`;
-  if(left<=0)return;
-  $("#f_l").onclick=()=>getPos(p=>{draftLoc=p;$("#f_l").textContent="Location saved"});
-  $("#f_s").onclick=async()=>{
-    const name=$("#f_n").value.trim(),address=$("#f_a").value.trim();
-    if(name.length<3||address.length<10)return toast("Add the place name and a full address.");
-    if(!draftLoc)return toast("Tap 'Use my current location' while you are at the place.");
-    const menu=$("#f_m").value.split("\n").map(l=>l.trim()).filter(Boolean).slice(0,60).map(l=>{const i=l.lastIndexOf("-");return i>0?{item:l.slice(0,i).trim(),price:l.slice(i+1).replace(/[^\d.]/g,"")}:{item:l,price:""}});
-    try{await addDoc(collection(db,"places"),{name,category:$("#f_c").value,address,phone:$("#f_p").value.trim(),lat:draftLoc.lat,lng:draftLoc.lng,menu,offer:isAdmin()?$("#f_o").value.trim():"",ownerId:user.uid,status:isAdmin()?"approved":"pending",createdAt:Timestamp.now()});
-      draftLoc=null;toast(isAdmin()?"Published.":"Sent. It will show after the admin approves it.");await load()}catch(e){console.error(e);toast("Could not save. Check your Firebase rules.")}
-  };
+  if(!S.user){$("#app").innerHTML=`<h3>${t("Add a place")}</h3><button class="btn" data-a="signin">${t("Sign in with Google")}</button>`;return}
+  const d0=new Date();d0.setHours(0,0,0,0);const left=isAdmin()?99:LIMIT-S.mine.filter(p=>p.createdAt?.toDate()>=d0).length;
+  if(left<=0){$("#app").innerHTML=`<h3>${t("Daily limit reached")}</h3>`;return}
+  $("#app").innerHTML=`<h3>${t("Add a place")}</h3><label>${t("Place name")}</label><input id="f_n"><label>${t("Type")}</label><select id="f_c">${CATS.map(c=>`<option value="${c}">${t(c)}</option>`).join("")}</select>
+  <label>${t("Address")}</label><textarea id="f_a" rows="2"></textarea><label>${t("Phone (optional)")}</label><input id="f_p" type="tel"><label>${t("Photo link (optional)")}</label><input id="f_i" placeholder="https://...">
+  <label>${t("Location")}</label><input id="f_l" placeholder="${esc(t("Paste Google Maps link or lat,lng"))}"><div class="row"><button class="btn alt" data-a="gpsf">📍 ${t("Use my location")}</button><button class="btn alt" data-a="pick">🗺️ ${t("Pick on map")}</button></div><p class="mute" id="locst"></p>
+  <label>${t("Menu, one item per line: Item - price")}</label><textarea id="f_m" rows="5" placeholder="Chicken biryani - 180"></textarea>
+  <div class="row"><button class="btn" data-a="submit">${isAdmin()?t("Publish"):t("Send for approval")}</button></div>`;
+  $("#f_l").oninput=e=>{const v=e.target.value,l=parseLoc(v);if(l){setLoc(l);const n=v.match(/\/maps\/place\/([^/@?]+)/);if(n&&!$("#f_n").value)$("#f_n").value=decodeURIComponent(n[1].replace(/\+/g," "))}else $("#locst").textContent=/goo\.gl/.test(v)?"Short links can't be read. Open it in Chrome and copy the long link from the address bar, or use Pick on map.":""};
+  if(S.loc)setLoc(S.loc);
+}
+A.gpsf=()=>getPos(p=>setLoc(p));
+let map,mk,tmp;
+A.pick=()=>{$("#mh").textContent=t("Tap on the map to drop a pin.");$("#mo").textContent=t("Confirm");$("#mapm").classList.add("on");
+  setTimeout(()=>{const c=S.loc||S.pos;if(!map){map=L.map("mp").setView(c?[c.lat,c.lng]:[20.6,78.9],c?17:5);L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map);map.on("click",e=>{tmp={lat:e.latlng.lat,lng:e.latlng.lng};mk?mk.setLatLng(e.latlng):mk=L.marker(e.latlng).addTo(map)})}else if(c)map.setView([c.lat,c.lng],17);map.invalidateSize()},60)};
+A.mapx=()=>$("#mapm").classList.remove("on");
+A.pickok=()=>{if(!tmp)return toast(t("Tap on the map to drop a pin."));setLoc(tmp);A.mapx()};
+A.submit=async()=>{
+  const name=$("#f_n").value.trim(),address=$("#f_a").value.trim();
+  if(name.length<3||address.length<10)return toast("Add the place name and a full address.");
+  if(!S.loc)return toast("Add the location: paste a Maps link, use your location, or pick on the map.");
+  const photo=$("#f_i").value.trim();if(photo&&!/^https:\/\//.test(photo))return toast("Photo link must start with https://");
+  const menu=$("#f_m").value.split("\n").map(l=>l.trim()).filter(Boolean).slice(0,60).map(l=>{const i=l.lastIndexOf("-");return i>0?{item:l.slice(0,i).trim(),price:l.slice(i+1).replace(/[^\d.]/g,"")}:{item:l,price:""}});
+  try{await addDoc(collection(db,"places"),{name,category:$("#f_c").value,address,phone:$("#f_p").value.trim(),photo,lat:S.loc.lat,lng:S.loc.lng,menu,offer:"",promoted:false,ownerId:S.user.uid,status:isAdmin()?"approved":"pending",createdAt:Timestamp.now()});
+    S.loc=null;toast(isAdmin()?"Published.":"Sent. It will show after the admin approves it.");S.tab="me";await load()}catch(e){console.error(e);toast("Could not save. Check your Firebase rules.")}
+};
+function vMe(){
+  const u=S.user;
+  $("#app").innerHTML=u?`<div class="row" style="align-items:center">${u.photoURL?`<img class="cimg" style="border-radius:50%;width:64px;height:64px" src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">`:""}<div><b>${esc(u.displayName||"")}</b><div class="mute">${esc(u.email)}</div></div></div>
+  <div class="row"><button class="btn alt" data-a="lang">${t("Language")}: ${S.lang=="te"?"తెలుగు":"English"}</button>${isAdmin()?`<button class="btn" data-a="tab" data-v="admin">${t("Admin panel")}${S.pending.length?` (${S.pending.length})`:""}</button>`:""}<button class="btn alt" data-a="signout">${t("Sign out")}</button></div>
+  <h3>${t("My places")}</h3>${S.mine.map(p=>`<div class="card" data-a="open" data-v="${p.id}">${img(p,"cimg")}<div class="cb"><b>${esc(p.name)}</b><div class="mute">${p.status=="approved"?t("Live"):t("Waiting for approval")}</div></div></div>`).join("")||"—"}`
+  :`<h3>${t("Profile")}</h3><button class="btn" data-a="signin">${t("Sign in with Google")}</button><div class="row"><button class="btn alt" data-a="lang">${t("Language")}: ${S.lang=="te"?"తెలుగు":"English"}</button></div>`;
 }
 function vAdmin(){
-  $("#app").innerHTML=`<h3>Waiting for approval (${pending.length})</h3>${pending.map(p=>`<div class="card"><h3>${esc(p.name)}</h3><div class="mute">${esc(p.category)} · ${esc(p.address)}</div>
-  <div class="row"><button class="btn" data-ok="${p.id}">Approve</button><button class="btn bad" data-no="${p.id}">Reject</button><button class="btn alt" data-open="${p.id}">Check menu</button><a class="btn alt" style="text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}">See on map</a></div></div>`).join("")||`<p class="mute">Nothing waiting.</p>`}
-  <h3>Live places (${places.length})</h3>${places.map(p=>`<div class="card"><b>${esc(p.name)}</b><div class="mute">${esc(p.offer||"No offer")}</div><div class="row"><button class="btn alt" data-of="${p.id}">Set offer</button><button class="btn bad" data-no="${p.id}">Delete</button></div></div>`).join("")}`;
-  bind();
-  document.querySelectorAll("[data-ok]").forEach(b=>b.onclick=async()=>{await updateDoc(doc(db,"places",b.dataset.ok),{status:"approved"});load()});
-  document.querySelectorAll("[data-no]").forEach(b=>b.onclick=async()=>{if(confirm("Delete this place?")){await deleteDoc(doc(db,"places",b.dataset.no));load()}});
-  document.querySelectorAll("[data-of]").forEach(b=>b.onclick=async()=>{const t=prompt("Offer text (leave empty to remove):");if(t!==null){await updateDoc(doc(db,"places",b.dataset.of),{offer:t.trim()});load()}});
+  if(!isAdmin())return;
+  const row=(p,b)=>`<div class="card" style="cursor:default">${img(p,"cimg")}<div class="cb"><b>${esc(p.name)}</b><div class="mute">${esc(p.address)}</div><div class="row">${b}</div></div></div>`;
+  $("#app").innerHTML=`<h3>${t("Waiting for approval")} (${S.pending.length})</h3>${S.pending.map(p=>row(p,`<button class="btn" data-a="ok" data-v="${p.id}">${t("Approve")}</button><button class="btn bad" data-a="del" data-v="${p.id}">${t("Reject")}</button><button class="btn alt" data-a="open" data-v="${p.id}">${t("Menu")}</button><a class="btn alt" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}">Map</a>`)).join("")}
+  <h3>${t("Live")} (${S.places.length})</h3>${S.places.map(p=>row(p,`<button class="btn alt" data-a="promo" data-v="${p.id}">${p.promoted?t("Remove promotion"):t("Promote")}</button><button class="btn alt" data-a="offer" data-v="${p.id}">${t("Set offer")}</button><button class="btn bad" data-a="del" data-v="${p.id}">${t("Delete")}</button>`)).join("")}`;
 }
-render();load();
+A.ok=async id=>{await updateDoc(doc(db,"places",id),{status:"approved"});load()};
+A.del=async id=>{if(confirm("Delete this place?")){await deleteDoc(doc(db,"places",id));load()}};
+A.promo=async id=>{const p=S.places.find(x=>x.id==id);await updateDoc(doc(db,"places",id),{promoted:!p.promoted});load()};
+A.offer=async id=>{const v=prompt("Offer text (empty to remove):");if(v!==null){await updateDoc(doc(db,"places",id),{offer:v.trim()});load()}};
+render();
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
 </script></body></html>
