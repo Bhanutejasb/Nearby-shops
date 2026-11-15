@@ -1,0 +1,138 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nearby Eats</title><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#14302B">
+<link rel="icon" href="icon-512.png">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14302B;--bg:#F2F5F3;--card:#fff;--line:#D5DED9;--gold:#E8A317;--chili:#C2412D;--mute:#5E726C}
+@media(prefers-color-scheme:dark){:root{--ink:#E6EFEA;--bg:#0E1F1C;--card:#16302B;--line:#27453F;--mute:#9DB3AC}}
+*{box-sizing:border-box}body{margin:0;font:16px/1.45 "Bricolage Grotesque",system-ui,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:72px}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:#14302B;color:#fff;position:sticky;top:0;z-index:5}
+h1{font-size:22px;font-weight:800;margin:0}h1 b{color:var(--gold)}
+button,select,input,textarea{font:inherit;color:inherit}
+.btn{background:var(--gold);color:#14302B;border:0;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer}
+.btn.alt{background:transparent;border:1.5px solid var(--line);color:var(--ink)}.btn.bad{background:var(--chili);color:#fff}
+main{max-width:640px;margin:0 auto;padding:14px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px}
+.chip{white-space:nowrap;border:1.5px solid var(--line);background:var(--card);border-radius:20px;padding:6px 14px;cursor:pointer}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h3{margin:0 0 2px;font-size:18px}.mute{color:var(--mute);font-size:14px}
+.offer{margin-top:8px;padding:8px 10px;border-left:4px solid var(--chili);background:rgba(194,65,45,.1);border-radius:6px;font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--line)}
+nav button{flex:1;padding:14px 4px;background:none;border:0;font-weight:600;color:var(--mute);cursor:pointer}
+nav button.on{color:var(--ink);box-shadow:inset 0 3px var(--gold)}
+label{display:block;margin:10px 0 4px;font-weight:600}
+input,select,textarea{width:100%;padding:10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card)}
+table{width:100%;border-collapse:collapse}td{padding:6px 0;border-bottom:1px dashed var(--line)}td:last-child{text-align:right;font-weight:600}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;z-index:9}
+#modal.on{display:flex}#sheet{background:var(--bg);width:100%;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px;max-width:640px;margin:0 auto}
+.badge{background:var(--chili);color:#fff;border-radius:10px;padding:0 7px;font-size:12px;margin-left:4px}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+</style></head><body>
+<header><h1>Nearby <b>Eats</b></h1><button class="btn alt" id="auth" style="color:#fff;border-color:#ffffff55"></button></header>
+<main id="app"></main>
+<nav id="nav"></nav>
+<div id="modal"><div id="sheet"></div></div>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,collection,addDoc,getDocs,query,where,doc,updateDoc,deleteDoc,Timestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ====== STEP 1: PASTE YOUR FIREBASE CONFIG AND ADMIN EMAIL ====== */
+const CFG={apiKey:"AIzaSyAeDrox1_ZQNHkLyWiT0v4HXoLAGTTbPMg",authDomain:"nearby-shops-62635.firebaseapp.com",projectId:"nearby-shops-62635",storageBucket:"nearby-shops-62635.firebasestorage.app",messagingSenderId:"786664571609",appId:"1:786664571609:web:65599e112620481b8374c8"};
+const ADMINS=["always.smilebh@gmail.com"];
+const DAILY_LIMIT=3;
+/* ================================================================= */
+
+const fb=initializeApp(CFG),auth=getAuth(fb),db=getFirestore(fb);
+const CATS=["Restaurant","Function hall","Hotel","Food counter"];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let user=null,pos=null,places=[],pending=[],mine=[],cat="All",tab="nearby",draftLoc=null;
+const isAdmin=()=>user&&ADMINS.includes(user.email);
+const dist=(a,b,c,d)=>{const r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 12742*Math.asin(Math.sqrt(h))};
+const toast=m=>alert(m);
+
+function getPos(cb){navigator.geolocation?.getCurrentPosition(p=>{cb({lat:p.coords.latitude,lng:p.coords.longitude})},()=>toast("Location is off. Turn on location permission for this site."),{enableHighAccuracy:true,timeout:15000})}
+
+async function load(){
+  try{
+    places=(await getDocs(query(collection(db,"places"),where("status","==","approved")))).docs.map(d=>({id:d.id,...d.data()}));
+    pending=isAdmin()?(await getDocs(query(collection(db,"places"),where("status","==","pending")))).docs.map(d=>({id:d.id,...d.data()})):[];
+    mine=user?(await getDocs(query(collection(db,"places"),where("ownerId","==",user.uid)))).docs.map(d=>({id:d.id,...d.data()})):[];
+  }catch(e){console.error(e);toast("Could not load places. Check your Firebase setup.")}
+  render();
+}
+onAuthStateChanged(auth,u=>{user=u;$("#auth").textContent=u?"Sign out":"Sign in";load()});
+$("#auth").onclick=()=>user?signOut(auth):signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>toast("Sign-in failed: "+e.code));
+
+function render(){
+  const tabs=[["nearby","Nearby"],["offers","Offers"],["add","Add place"]];
+  if(isAdmin())tabs.push(["admin","Admin"+(pending.length?`<span class="badge">${pending.length}</span>`:"")]);
+  $("#nav").innerHTML=tabs.map(([k,v])=>`<button class="${tab==k?"on":""}" data-t="${k}">${v}</button>`).join("");
+  document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
+  ({nearby:vList,offers:vOffers,add:vAdd,admin:vAdmin})[tab]();
+}
+function sorted(list){return list.map(p=>({...p,d:pos?dist(pos.lat,pos.lng,p.lat,p.lng):null})).sort((a,b)=>(a.d??1e9)-(b.d??1e9))}
+function card(p){return `<div class="card"><h3>${esc(p.name)}</h3><div class="mute">${esc(p.category)} · ${esc(p.address)}${p.d!=null?` · ${p.d.toFixed(1)} km`:""}</div>${p.offer?`<div class="offer">${esc(p.offer)}</div>`:""}<div class="row"><button class="btn" data-open="${p.id}">Menu &amp; details</button><a class="btn alt" style="text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}">Directions</a></div></div>`}
+function bind(){document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openPlace(b.dataset.open))}
+function vList(){
+  const shown=sorted(places.filter(p=>cat=="All"||p.category==cat));
+  $("#app").innerHTML=`<div class="row" style="margin:0 0 10px"><button class="btn" id="loc">${pos?"Location set":"Use my location"}</button></div>
+  <div class="chips">${["All",...CATS].map(c=>`<span class="chip ${c==cat?"on":""}" data-c="${c}">${c}</span>`).join("")}</div>
+  ${shown.map(card).join("")||`<p class="mute">No places here yet. Be the first to add one.</p>`}`;
+  $("#loc").onclick=()=>getPos(p=>{pos=p;render()});
+  document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{cat=c.dataset.c;render()});bind();
+}
+function vOffers(){
+  const s=sorted(places.filter(p=>p.offer));
+  $("#app").innerHTML=s.map(card).join("")||`<p class="mute">No offers running right now.</p>`;bind();
+}
+function openPlace(id){
+  const p=[...places,...pending].find(x=>x.id==id);if(!p)return;
+  $("#sheet").innerHTML=`<h2 style="margin:0">${esc(p.name)}</h2><div class="mute">${esc(p.category)} · ${esc(p.address)}</div>
+  ${p.phone?`<p><a href="tel:${esc(p.phone)}">${esc(p.phone)}</a></p>`:""}${p.offer?`<div class="offer">${esc(p.offer)}</div>`:""}
+  <h3>Menu</h3>${(p.menu||[]).length?`<table>${p.menu.map(m=>`<tr><td>${esc(m.item)}</td><td>${m.price?"₹"+esc(m.price):""}</td></tr>`).join("")}</table>`:`<p class="mute">Menu not added yet.</p>`}
+  <div class="row"><a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}">Get directions</a><button class="btn alt" id="x">Close</button></div>`;
+  $("#modal").classList.add("on");$("#x").onclick=()=>$("#modal").classList.remove("on");
+}
+$("#modal").onclick=e=>{if(e.target.id=="modal")$("#modal").classList.remove("on")};
+
+function vAdd(){
+  if(!user){$("#app").innerHTML=`<div class="card"><h3>Sign in to add a place</h3><p class="mute">We check every new place before it goes live.</p><button class="btn" id="si">Sign in with Google</button></div>`;$("#si").onclick=()=>$("#auth").click();return}
+  const today=new Date();today.setHours(0,0,0,0);
+  const used=mine.filter(p=>p.createdAt?.toDate()>=today).length;
+  const left=isAdmin()?99:DAILY_LIMIT-used;
+  const myList=mine.length?`<h3>Your submissions</h3>${mine.map(p=>`<div class="card"><b>${esc(p.name)}</b> <span class="mute">· ${p.status=="approved"?"Live":"Waiting for approval"}</span></div>`).join("")}`:"";
+  $("#app").innerHTML=left<=0?`<div class="card"><h3>Daily limit reached</h3><p class="mute">You can add ${DAILY_LIMIT} places a day. Come back tomorrow.</p></div>${myList}`:`<div class="card"><h3>${isAdmin()?"Add a place (goes live now)":"Add a place"}</h3>
+  <p class="mute">${isAdmin()?"":"Stand at the place and use your location, so we can check the address. "}${isAdmin()?"":left+" left today."}</p>
+  <label>Name</label><input id="f_n"><label>Type</label><select id="f_c">${CATS.map(c=>`<option>${c}</option>`).join("")}</select>
+  <label>Full address</label><textarea id="f_a" rows="2"></textarea><label>Phone (optional)</label><input id="f_p" type="tel">
+  <label>Map location</label><button class="btn alt" id="f_l">${draftLoc?"Location saved":"Use my current location"}</button>
+  <label>Menu, one item per line: Item - price</label><textarea id="f_m" rows="5" placeholder="Chicken biryani - 180"></textarea>
+  ${isAdmin()?`<label>Offer (optional)</label><input id="f_o">`:""}
+  <div class="row"><button class="btn" id="f_s">${isAdmin()?"Publish":"Send for approval"}</button></div></div>${myList}`;
+  if(left<=0)return;
+  $("#f_l").onclick=()=>getPos(p=>{draftLoc=p;$("#f_l").textContent="Location saved"});
+  $("#f_s").onclick=async()=>{
+    const name=$("#f_n").value.trim(),address=$("#f_a").value.trim();
+    if(name.length<3||address.length<10)return toast("Add the place name and a full address.");
+    if(!draftLoc)return toast("Tap 'Use my current location' while you are at the place.");
+    const menu=$("#f_m").value.split("\n").map(l=>l.trim()).filter(Boolean).slice(0,60).map(l=>{const i=l.lastIndexOf("-");return i>0?{item:l.slice(0,i).trim(),price:l.slice(i+1).replace(/[^\d.]/g,"")}:{item:l,price:""}});
+    try{await addDoc(collection(db,"places"),{name,category:$("#f_c").value,address,phone:$("#f_p").value.trim(),lat:draftLoc.lat,lng:draftLoc.lng,menu,offer:isAdmin()?$("#f_o").value.trim():"",ownerId:user.uid,status:isAdmin()?"approved":"pending",createdAt:Timestamp.now()});
+      draftLoc=null;toast(isAdmin()?"Published.":"Sent. It will show after the admin approves it.");await load()}catch(e){console.error(e);toast("Could not save. Check your Firebase rules.")}
+  };
+}
+function vAdmin(){
+  $("#app").innerHTML=`<h3>Waiting for approval (${pending.length})</h3>${pending.map(p=>`<div class="card"><h3>${esc(p.name)}</h3><div class="mute">${esc(p.category)} · ${esc(p.address)}</div>
+  <div class="row"><button class="btn" data-ok="${p.id}">Approve</button><button class="btn bad" data-no="${p.id}">Reject</button><button class="btn alt" data-open="${p.id}">Check menu</button><a class="btn alt" style="text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}">See on map</a></div></div>`).join("")||`<p class="mute">Nothing waiting.</p>`}
+  <h3>Live places (${places.length})</h3>${places.map(p=>`<div class="card"><b>${esc(p.name)}</b><div class="mute">${esc(p.offer||"No offer")}</div><div class="row"><button class="btn alt" data-of="${p.id}">Set offer</button><button class="btn bad" data-no="${p.id}">Delete</button></div></div>`).join("")}`;
+  bind();
+  document.querySelectorAll("[data-ok]").forEach(b=>b.onclick=async()=>{await updateDoc(doc(db,"places",b.dataset.ok),{status:"approved"});load()});
+  document.querySelectorAll("[data-no]").forEach(b=>b.onclick=async()=>{if(confirm("Delete this place?")){await deleteDoc(doc(db,"places",b.dataset.no));load()}});
+  document.querySelectorAll("[data-of]").forEach(b=>b.onclick=async()=>{const t=prompt("Offer text (leave empty to remove):");if(t!==null){await updateDoc(doc(db,"places",b.dataset.of),{offer:t.trim()});load()}});
+}
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
+</script></body></html>
